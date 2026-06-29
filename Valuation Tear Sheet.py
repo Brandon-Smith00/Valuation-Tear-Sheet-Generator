@@ -124,6 +124,7 @@ def tbl_row(c, ry, rh, cells, col_x, col_w, alt=False, hi=False,
 
 PROMPT = """You are a senior Goldman Sachs investment banking analyst. Generate a realistic institutional valuation tear sheet for: {company}
 
+Use the most current and accurate financial data available. Set fiscalYear to "FY2025" exactly.
 CRITICAL: Valuation ranges must be TIGHT — no wider than 15% spread from midpoint. Use 35th-65th percentile multiples only.
 
 Respond ONLY with valid JSON, no markdown, no backticks, no explanation:
@@ -234,15 +235,16 @@ def build_pdf(d, output_path):
     tx(c, 63, BY+2, co["ticker"], "Helvetica-Bold", 7.5, NAVY, "center")
     c.setFont("Helvetica", 8); c.setFillColor(HexColor('#8899AA'))
     c.drawString(84, BY+2, f"  {co['exchange']}  .  {co['sector']}  .  {co['industry']}")
-    tx(c, W-48, HDR_TOP-20, "FISCAL PERIOD",       "Helvetica-Bold", 6.5, HexColor('#556677'), "right")
-    tx(c, W-48, HDR_TOP-33, co["fiscalYear"],      "Helvetica-Bold", 11,  HexColor('#BBCCDD'), "right")
-    tx(c, W-48, HDR_TOP-47, "ANALYSIS TYPE",       "Helvetica-Bold", 6.5, HexColor('#556677'), "right")
-    tx(c, W-48, HDR_TOP-59, "Market + Asset-Based","Helvetica",      8.5, HexColor('#8899AA'), "right")
+    tx(c, W-48, HDR_TOP-20, "FISCAL PERIOD",    "Helvetica-Bold", 6.5, HexColor('#556677'), "right")
+    tx(c, W-48, HDR_TOP-33, co["fiscalYear"],   "Helvetica-Bold", 11,  HexColor('#BBCCDD'), "right")
+    tx(c, W-48, HDR_TOP-47, "ANALYSIS TYPE",    "Helvetica-Bold", 6.5, HexColor('#556677'), "right")
+    tx(c, W-48, HDR_TOP-59, "Mkt+Asset-Based",  "Helvetica",      7.5, HexColor('#8899AA'), "right")
     desc = co.get("description","")
     words = desc.split(); line=""; lines=[]
+    max_desc_w = (W - 72) - 180  # leave room for right-side fiscal/analysis block
     for w in words:
         test=(line+" "+w).strip()
-        if c.stringWidth(test,"Helvetica",8)<W-72-60: line=test
+        if c.stringWidth(test,"Helvetica",8)<max_desc_w: line=test
         else: lines.append(line); line=w
     if line: lines.append(line)
     c.setFont("Helvetica",8); c.setFillColor(HexColor('#889AAB'))
@@ -261,7 +263,7 @@ def build_pdf(d, output_path):
         if i>0: vl(c,mx-2,MET_TOP-14,MET_TOP+14,HexColor('#1C3A5A'),0.6)
     Y=HDR_TOP-HDR_H-18
     sec_label(c,36,Y,"PUBLIC COMPARABLE COMPANY UNIVERSE")
-    CW=[148,60,52,52,50,58,40,40,54]; CX=[36]; [CX.append(CX[-1]+w) for w in CW[:-1]]
+    CW=[142,56,50,50,48,60,38,38,58]; CX=[36]; [CX.append(CX[-1]+w) for w in CW[:-1]]
     RH=16; ttop=Y-10
     tbl_header(c,CX,CW,["COMPANY","TICKER","MKT CAP","EV","EV/REV","EV/EBITDA","P/E","P/BV","EBITDA MGN"],ttop,RH)
     rows=[[cc["name"],cc["ticker"],fmt_b(cc["marketCap"]),fmt_b(cc["enterpriseValue"]),
@@ -289,7 +291,7 @@ def build_pdf(d, output_path):
     # PAGE 2
     pg_stamp(c,2,3); Y=H-44
     sec_label(c,36,Y,"SELECTED M&A TRANSACTION UNIVERSE")
-    TW=[144,144,36,62,56,56,72]; TX=[36]; [TX.append(TX[-1]+w) for w in TW[:-1]]
+    TW=[118,110,34,56,56,60,106]; TX=[36]; [TX.append(TX[-1]+w) for w in TW[:-1]]
     RH=16; ttop=Y-10
     tbl_header(c,TX,TW,["TARGET","ACQUIRER","YEAR","DEAL VALUE","EV/REVENUE","EV/EBITDA","ACQ. PREMIUM"],ttop,RH)
     for ri,tr in enumerate(txn):
@@ -374,7 +376,7 @@ def build_pdf(d, output_path):
     box(c,cx_l-36,FT+2,72,14,fill=GOLD)
     tx(c,cx_l,FT+9,f"Current  {fmt_p(cur)}","Helvetica-Bold",7.5,white,"center")
     Y4=FT-len(ff)*RG-38; sec_label(c,36,Y4,"VALUATION SUMMARY BRIDGE")
-    SW=[156,62,66,62,70,70,62]; SX=[36]; [SX.append(SX[-1]+w) for w in SW[:-1]]
+    SW=[150,58,64,58,68,68,72]; SX=[36]; [SX.append(SX[-1]+w) for w in SW[:-1]]
     RH=17; stop=Y4-10
     tbl_header(c,SX,SW,["METHODOLOGY","LOW","MIDPOINT","HIGH","EQUITY (LOW)","EQUITY (HIGH)","VS. CURRENT"],stop,RH)
     sum_rows=[("Comparable Companies",cv["impliedSharePriceLow"],cv["impliedSharePriceHigh"],cv["impliedEquityLow"],cv["impliedEquityHigh"]),
